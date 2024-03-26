@@ -1,0 +1,15 @@
+edu\upc\etsetb\poo\corrector\TestSuite.class
+edu\upc\etsetb\poo\basededatos\iu\InterfazUsuarioParaCorrector.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\busqueda\CriterioMenorQueTest.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\ComparadorFilasTest.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\busqueda\CriterioIgualTest.class
+edu\upc\etsetb\poo\basededatos\dominio\esquema\ClaveTest.class
+edu\upc\etsetb\poo\basededatos\dominio\tabla\FilaDatosTest.class
+edu\upc\etsetb\poo\basededatos\dominio\tabla\Tabla1Test.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\ControladorTest.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\CorrectorException.class
+edu\upc\etsetb\poo\basededatos\dominio\esquema\EsquemaTest.class
+edu\upc\etsetb\poo\corrector\TestAll.class
+edu\upc\etsetb\poo\basededatos\dominio\tabla\Tabla2Test.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\busqueda\CriterioMayorQueTest.class
+edu\upc\etsetb\poo\basededatos\casosdeuso\busqueda\CriterioContieneTest.class
