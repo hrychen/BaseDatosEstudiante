@@ -31,7 +31,8 @@ public abstract class Criterio {
      *                        <code>tipo</code>
      */
     public Criterio(String clave, String valorAComprobar) {
-        throw new UnsupportedOperationException("Criterio::Criterio(clave,valorAComprobar) no implementado.");
+        this.nombreClave = clave;
+        this.valorAComprobar = valorAComprobar;
     }
 
     /**

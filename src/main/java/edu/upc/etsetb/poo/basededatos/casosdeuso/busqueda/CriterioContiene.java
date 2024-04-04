@@ -30,6 +30,10 @@ public class CriterioContiene extends Criterio {
      */
     @Override
     public boolean esCumplido(FilaDatos f) {
-        throw new UnsupportedOperationException("CriterioContiene::esCumplido(f) no implementado.");
+        String valor = f.get(this.nombreClave);
+        if (valor == null) {
+            return false; // Si el valor es null, no puede contener ninguna subcadena, por lo tanto, retorna falso.
+        }
+        return valor.toLowerCase().contains(this.valorAComprobar.toLowerCase());
     }
 }

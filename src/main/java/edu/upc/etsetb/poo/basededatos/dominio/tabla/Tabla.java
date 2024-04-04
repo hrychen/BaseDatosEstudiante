@@ -74,7 +74,26 @@ public class Tabla {
      */
     
     public void anyade(FilaDatos datos) throws ValorClaveUnicaException, ClaveInexistenteException {
-        throw new UnsupportedOperationException("Clase Tabla metodo anyade no implementado.");
+        // Verificación de la correspondencia con el esquema
+        datos.valida(this.esquema);
+        
+        // Luego, verifica la unicidad de las claves que deben ser únicas.
+        for (Map.Entry<String, Clave> entry : this.esquema.getCampos().entrySet()) {
+        String nombreClave = entry.getKey();
+        Clave clave = entry.getValue();
+
+        if (clave.isUnica()) {
+            String valorClaveUnica = datos.get(nombreClave);
+            for (FilaDatos filaExistente : this.filas) {
+                String valorExistente = filaExistente.get(nombreClave);
+                if (valorClaveUnica != null && valorClaveUnica.equals(valorExistente)) {
+                    throw new ValorClaveUnicaException(nombreClave,valorClaveUnica);
+                }
+            }
+        }
+    }
+        
+        this.filas.add(datos);
     }
 
     /**

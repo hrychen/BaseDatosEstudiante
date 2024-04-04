@@ -69,5 +69,24 @@ public class Esquema {
      */
     public int getNumCampos(){
         return this.campos.size();
-    }    
+    }
+
+    public Map<String, Clave> getCampos() {
+        return campos;
+    }
+
+    public void setCampos(Map<String, Clave> campos) {
+        this.campos = campos;
+    }
+    
+    // Implementación del método getCabeceras
+    public List<String> getCabeceras() {
+        return new ArrayList<>(this.campos.keySet());
+    }
+
+    // Implementación del método getClave
+    public Clave getClave(String nombre) {
+        return this.campos.get(nombre);
+    }
+
 }

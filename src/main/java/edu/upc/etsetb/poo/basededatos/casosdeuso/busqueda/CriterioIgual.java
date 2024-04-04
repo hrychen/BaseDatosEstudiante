@@ -30,6 +30,10 @@ public class CriterioIgual extends Criterio {
      */
     @Override
     public boolean esCumplido(FilaDatos f) {
-        throw new UnsupportedOperationException("CriterioIgual::esCumplido(f) no implementado.");
+        String valor = f.get(this.nombreClave);
+        if (valor == null) {
+            return this.valorAComprobar == null;
+        }
+        return valor.equalsIgnoreCase(this.valorAComprobar);
     }
 }

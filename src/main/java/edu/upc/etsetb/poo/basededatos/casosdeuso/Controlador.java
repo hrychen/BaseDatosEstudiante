@@ -5,7 +5,14 @@ import edu.upc.etsetb.poo.basededatos.casosdeuso.busqueda.CriterioContiene;
 import edu.upc.etsetb.poo.basededatos.casosdeuso.busqueda.CriterioIgual;
 import edu.upc.etsetb.poo.basededatos.dominio.tabla.FilaDatos;
 import edu.upc.etsetb.poo.basededatos.dominio.tabla.Tabla;
+import edu.upc.etsetb.poo.basededatos.dominio.esquema.Esquema;
+import edu.upc.etsetb.poo.basededatos.dominio.esquema.Clave;
+import edu.upc.etsetb.poo.basededatos.dominio.esquema.ClaveYaExisteException;
+import edu.upc.etsetb.poo.basededatos.dominio.tabla.ClaveInexistenteException;
+import edu.upc.etsetb.poo.basededatos.dominio.tabla.ValorClaveUnicaException;
 import edu.upc.etsetb.poo.basededatos.iu.InterfazUsuario;
+import java.io.FileWriter;
+import java.io.PrintWriter;
 import java.util.*;
 
 /**
@@ -124,7 +131,7 @@ public class Controlador {
      * Constructor sin argumentos que crea un nuevo mapa vacío
      */
     public Controlador() {
-        throw new UnsupportedOperationException("Controlador::Controlador() no implementado.");
+        this.tablas = new HashMap<>();
     }
     
     /**
@@ -133,7 +140,7 @@ public class Controlador {
      * @param iu el nuevo valor de atributo iu
      */
     public void setIu(InterfazUsuario iu) {
-        throw new UnsupportedOperationException("Controlador::setIu(iu) no implementado.");
+        this.iu = iu;
     }
 
     /**
@@ -170,7 +177,31 @@ public class Controlador {
      *                 "duración" }</code>
      */
     public void crearTabla(String[] palabras) {
-        throw new UnsupportedOperationException("Controlador::crearTabla(palabras) no implementado.");
+         if (palabras.length < 3) {
+            iu.println("Error en formato del comando.");
+            return;
+        }
+        String nombreTabla = palabras[0];
+        if (tablas.containsKey(nombreTabla)) {
+            iu.println("Una tabla con ese nombre ya existe.");
+            return;
+        }
+
+        Esquema esquema = new Esquema();
+        for (int i = 2; i < palabras.length; i++) {
+            boolean esUnica = palabras[i].startsWith(String.valueOf(SIMB_CLAVE_ÚNICA));
+            String nombreClave = esUnica ? palabras[i].substring(1) : palabras[i];
+            try {
+                esquema.addClave(new Clave(nombreClave, esUnica));
+            } catch (ClaveYaExisteException e) {
+                iu.println("Error: " + e.getMessage());
+                return;
+            }
+        }
+
+        Tabla nuevaTabla = new Tabla(nombreTabla, esquema);
+        tablas.put(nombreTabla, nuevaTabla);
+        iu.println("Tabla " + nombreTabla + " creada con éxito.");
     }
 
     /**
@@ -203,7 +234,33 @@ public class Controlador {
      *
      */
     public void anyadir(String[] palabras) {
-        throw new UnsupportedOperationException("Controlador::anyadir(palabras) no implementado.");
+            if (palabras.length < 3) {
+            iu.println("Error en formato del comando.");
+            return;
+        }
+        String nombreTabla = palabras[0];
+        Tabla tabla = tablas.get(nombreTabla);
+        if (tabla == null) {
+            iu.println("La tabla " + nombreTabla + " no existe.");
+            return;
+        }
+
+        FilaDatos fila = new FilaDatos();
+        for (int i = 2; i < palabras.length; i++) {
+            String[] par = palabras[i].split("=");
+            if (par.length != 2) {
+                iu.println("Error en formato del comando.");
+                return;
+            }
+            fila.put(par[0], par[1]);
+        }
+
+        try {
+            tabla.anyade(fila);
+            iu.println("Fila añadida a la tabla " + nombreTabla + ".");
+        } catch (ValorClaveUnicaException | ClaveInexistenteException e) {
+            iu.println("Error: " + e.getMessage());
+        }
     }
 
 
@@ -215,7 +272,12 @@ public class Controlador {
      * no existe
      */
     public List<String> getCabeceras(String nombreTabla) {
-        throw new UnsupportedOperationException("Controlador::getCabeceras(nombreTabla) no implementado.");
+        Tabla tabla = tablas.get(nombreTabla);
+        if (tabla == null) {
+            iu.println("La tabla " + nombreTabla + " no existe.");
+            return null; 
+        }
+        return tabla.getCabeceras();
     }
     
     /**
@@ -242,7 +304,26 @@ public class Controlador {
      * interpretación de <code>palabras[2]</code>.
      */
     public static Criterio interpretaCriterio(String[] palabras) {
-        throw new UnsupportedOperationException("Controlador::interpretaCriterio(palabras) no implementado.");
+        if (palabras.length < 3) {
+            return null; // Formato incorrecto del comando.
+        }
+        String criterioTexto = palabras[2];
+        String[] partes = criterioTexto.split("=", 2);
+        if (partes.length < 2) {
+            return null; // Falta el valor para comparar.
+        }
+        String clave = partes[0];
+        String valor = partes[1];
+            if (criterioTexto.contains(SIMB_IGUAL)) {
+                return new CriterioIgual(clave, valor);
+                } else if (criterioTexto.contains(SIMB_CONTIENE)) {
+                    return new CriterioContiene(clave, valor);
+                } else if (criterioTexto.contains(SIMB_MAYOR_QUE)) {
+                    // Implementación pendiente del CriterioMayorQue
+                } else if (criterioTexto.contains(SIMB_MENOR_QUE)) {
+                    // Implementación pendiente del CriterioMenorQue
+            }
+        return null;
     }
 
     /**
@@ -308,7 +389,26 @@ public class Controlador {
      * si se intenta buscar en una tabla que NO existe
      */
     public List<FilaDatos> buscar(String[] palabras) {
-        throw new UnsupportedOperationException("Controlador::buscar(palabras) no implementado.");
+       if (palabras.length < 2) {
+            iu.println("Error en formato del comando.");
+            return new ArrayList<>();
+        }
+        String nombreTabla = palabras[0];
+        Tabla tabla = tablas.get(nombreTabla);
+            if (tabla == null) {
+                iu.println("La tabla " + nombreTabla + " no existe.");
+                return new ArrayList<>();
+            }
+
+        Criterio criterio = palabras.length > 2 ? interpretaCriterio(palabras) : null;
+        List<FilaDatos> resultado = tabla.busca(criterio);
+            if (resultado.isEmpty()) {
+                iu.println("No se encontraron filas que cumplan el criterio.");
+            } else {
+                List<String> cabeceras = tabla.getCabeceras();
+                iu.presentaResultados(cabeceras, resultado);
+            }
+        return resultado;
     }
     
     /**
@@ -349,7 +449,30 @@ public class Controlador {
      * contiene el nombre de una tabla que no existe
      */
     public List<FilaDatos> eliminar(String[] palabras) {
-        throw new UnsupportedOperationException("Controlador::eliminar(palabras) no implementado.");
+       if (palabras.length < 3) {
+        iu.println("Error en formato del comando.");
+        return new ArrayList<>();
+       }
+        String nombreTabla = palabras[0];
+        Tabla tabla = tablas.get(nombreTabla);
+        if (tabla == null) {
+            iu.println("La tabla " + nombreTabla + " no existe.");
+            return new ArrayList<>();
+        }
+
+        Criterio criterio = interpretaCriterio(Arrays.copyOfRange(palabras, 1, palabras.length));
+        if (criterio == null) {
+            iu.println("Error en formato del criterio.");
+            return new ArrayList<>();
+        }
+
+        List<FilaDatos> filasEliminadas = tabla.elimina(criterio);
+        if (filasEliminadas.isEmpty()) {
+            iu.println("No se eliminaron filas que cumplan el criterio.");
+        } else {
+            iu.println(filasEliminadas.size() + " fila(s) eliminada(s).");
+        }
+        return filasEliminadas;
     }
 
     /**
@@ -390,7 +513,41 @@ public class Controlador {
      * @param archivo Nombre del archivo en el que se guardará el archivo de exportación
      */
     public void exporta(String archivo) {
-        throw new UnsupportedOperationException("Controlador::exporta(archivo) no implementado.");
+        try (PrintWriter writer = new PrintWriter(new FileWriter(archivo))) {
+            for (String nombreTabla : tablas.keySet()) {
+                Tabla tabla = tablas.get(nombreTabla);
+                Esquema esquema = tabla.getEsquema();
+                
+                // Exportando el esquema de la tabla
+                writer.println(nombreTabla + " crea " + esquemaComoString(esquema));
+                
+                // Exportando filas de datos
+                for (FilaDatos fila : tabla.buscaTodo()) {
+                    writer.println(nombreTabla + " añade " + filaComoString(fila, esquema));
+                }
+            }
+        } catch (Exception e) {
+            iu.println("Error al exportar las tablas: " + e.getMessage());
+        }
+    }
+    
+    private String esquemaComoString(Esquema esquema) {
+        StringBuilder esquemaStr = new StringBuilder();
+        for (String clave : esquema.getCabeceras()) {
+            if (esquema.getClave(clave).isUnica()) {
+                esquemaStr.append("*");
+            }
+            esquemaStr.append(clave).append(" ");
+        }
+        return esquemaStr.toString().trim();
+    }
+
+    private String filaComoString(FilaDatos fila, Esquema esquema) {
+        StringBuilder filaStr = new StringBuilder();
+        for (String clave : esquema.getCabeceras()) {
+            filaStr.append(clave).append("=").append(fila.get(clave)).append(" ");
+        }
+        return filaStr.toString().trim();
     }
 
 
@@ -412,6 +569,30 @@ public class Controlador {
      * ejemplo: <code>{ "peliculas", "ordena", "título" } o { "peliculas", "ordena", "año", "desc" }</code>
      */
     public void ordenar(String[] palabras) {
-        throw new UnsupportedOperationException("Controlador::ordenar(palabras) no implementado.");
+        if (palabras.length < 3) {
+            iu.println("Error en formato del comando.");
+            return;
+        }
+        String nombreTabla = palabras[0];
+        Tabla tabla = tablas.get(nombreTabla);
+        if (tabla == null) {
+            iu.println("La tabla " + nombreTabla + " no existe.");
+            return;
+        }
+        
+        String columnaAOrdenar = palabras[2];
+        boolean ascendente = palabras.length < 4 || !palabras[3].equals("desc");
+        tabla.ordena(columnaAOrdenar, ascendente);
+        iu.println("Tabla " + nombreTabla + " ordenada por " + columnaAOrdenar + (ascendente ? " (ascendente)." : " (descendente)."));
     }
+    
+
+    public Map<String, Tabla> getTablas() {
+        return tablas;
+    }
+
+    public void setTablas(Map<String, Tabla> tablas) {
+        this.tablas = tablas;
+    }
+    
 }

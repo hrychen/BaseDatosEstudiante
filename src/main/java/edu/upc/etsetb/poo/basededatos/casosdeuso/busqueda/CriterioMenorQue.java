@@ -36,6 +36,17 @@ public class CriterioMenorQue extends Criterio {
      */
     @Override
     public boolean esCumplido(FilaDatos f) {
-        throw new UnsupportedOperationException("CriterioMenorQue::esCumplido(f) no implementado.");
+        String valor = f.get(this.nombreClave);
+        if (valor == null) {
+            return false; // Si el valor es null, no puede ser menor que cualquier número.
+        }
+        
+        try {
+            double valorNumerico = Double.parseDouble(valor);
+            return valorNumerico < valorNumericoAComprobar;
+        } catch (NumberFormatException e) {
+            // Si el valor no se puede convertir a número, se devuelve false.
+            return false;
+        }
     }
 }
